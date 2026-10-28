@@ -16,7 +16,9 @@ En el Dia 1 usa solo ramas locales: day1/prompting, main y checkpoint/day1. Cons
 4. No silencies CodeQL, Dependency Review ni JaCoCo.
 5. No agregues secretos reales; usa variables de entorno y valores de prueba aislados.
 6. Separa API, servicio, repositorio y seguridad en cambios revisables.
-7. Meta de cobertura del código modificado: 85% o superior.
+7. Meta de cobertura del código modificado: 85% o superior. Distingue la
+    cobertura global de la cobertura del cambio; declara el método de medición
+    y sus límites.
 
 #### Clean code
 
