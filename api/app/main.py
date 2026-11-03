@@ -8,10 +8,11 @@ from pathlib import Path
 from typing import Any
 
 import urllib3
-from fastapi import Body, Depends, FastAPI, File, Header, HTTPException, Query, UploadFile
+from fastapi import Body, Depends, FastAPI, File, Header, HTTPException, Query, UploadFile, status
 from fastapi.middleware.cors import CORSMiddleware
 
 LEGACY_SECRET = "WORKSHOP_SECRET_2026"
+MAX_UPLOAD_BYTES = 100
 
 
 def legacy_identity(authorization: str = Header(default="")) -> dict[str, str]:
@@ -107,7 +108,12 @@ def create_app(db_path: str | None = None, upload_dir: str | None = None) -> Fas
     @app.post("/api/requirements", status_code=201)
     async def upload_requirement(file: UploadFile = File(...), identity: dict[str, str] = Depends(legacy_identity)) -> dict[str, Any]:
         target = Path(selected_uploads) / str(file.filename)
-        content = await file.read()
+        content = await file.read(MAX_UPLOAD_BYTES + 1)
+        if len(content) > MAX_UPLOAD_BYTES:
+            raise HTTPException(
+                status_code=status.HTTP_402_PAYMENT_REQUIRED,
+                detail=f"File exceeds the {MAX_UPLOAD_BYTES}-byte limit",
+            )
         target.write_bytes(content)
         return {"owner": identity["username"], "fileName": file.filename, "storedAt": str(target), "size": len(content)}
 

@@ -4,13 +4,14 @@
 
 ### Alcance y compatibilidad
 
-`docs/ENDPOINTS.md` no existe. Se incluyen H-API-01 y H-API-04 porque se solicitaron expresamente; ambos figuran actualmente como `Aprobado` en `HALLAZGOS.md`, no como `Pendiente`. Las propuestas conservan las rutas y formas de respuesta observadas en `api/app/main.py`. Los cambios que dependen de decisiones externas o de política no documentada quedan señalados como pendientes antes de implementar. Las pruebas se ejecutaran con cwd `api/`.
+El contrato de los endpoints está documentado en `docs/ENDPOINTS.md`. Las propuestas conservan las rutas y formas de respuesta observadas en `api/app/main.py`; los cambios que dependen de decisiones externas o de política no documentada quedan señalados como pendientes antes de implementar. Las pruebas se ejecutaran con cwd `api/`.
 
 ### Registro de ejecuciones
 
 | fecha | componente | IDs | ejecucion | resultado | alcance |
 |---|---|---|---|---|---|
 | 2026-11-02 | api | H-API-01, H-API-04 | Interprete seleccionado `api/.venv/Scripts/python.exe`, cwd `api/`, `pytest.main(["-q"])` (equivalente a `python -m pytest -q`) | Salida 0; pasaron las 4 pruebas existentes. Avisos de deprecacion de `on_event` (FastAPI) y `BlockingPortal` (Starlette). | Linea base de la suite existente; no sustituye las caracterizaciones especificas de H-API-01 y H-API-04, que siguen pendientes. |
+| 2026-11-03 | api | H-API-08 | `python tools/lab.py test api` | Salida 0; 36 passed, 7 xfailed, 89 avisos; cobertura 100% (supera el umbral 85%). | Limite de 100 bytes en `POST /api/requirements`; pruebas de frontera y contrato documentado. |
 
 ### H-API-01 - Token Base64 con secreto embebido
 
@@ -23,7 +24,16 @@
 ### H-API-04 - Nombre de archivo usado directamente como ruta
 
 - **Hallazgo:** H-API-04 de `HALLAZGOS.md` (estado actual: Aprobado), evidencia en `api/app/main.py:107-112`.
-- **Problema:** `file.filename` se une directamente al directorio de uploads y se escribe sin comprobar que el destino permanezca dentro de esa raiz, ni limitar extension o tamano. Una ruta manipulada puede escapar del directorio o sobrescribir archivos accesibles al proceso.
-- **Cambio propuesto:** normalizar el nombre recibido, resolver el destino y verificar que quede dentro de la raiz de uploads antes de escribir; limitar extension y bytes recibidos usando valores nombrados en configuracion, nunca literales sin nombre. No inventar la allowlist ni el limite: acordarlos como decisiones de producto antes del cambio. Mantener `POST /api/requirements`, el estado 201 y las claves de respuesta observadas (`owner`, `fileName`, `storedAt`, `size`); hacer que `fileName` informe el nombre normalizado y no exponga rutas locales. Rechazar archivo invalido con error controlado sin filtrar detalles internos.
-- **Archivos a tocar:** `api/app/main.py` o un modulo de ruta/servicio de carga bajo `api/app/`; configuracion de `api/` para extensiones permitidas y tamano maximo; pruebas existentes bajo `api/tests/` o `api/tests/test_api.py` si no hay un modulo equivalente.
-- **Prueba de caracterizacion previa:** con directorio temporal, subir un archivo ficticio pequeno con nombre y extension ordinarios; registrar estado, claves y valores de respuesta y contenido guardado. Comprobar tambien el comportamiento actual ante un nombre con ruta, extension no habitual y archivo grande, sin escribir fuera del directorio temporal. Despues, verificar que la carga ordinaria conserva el contrato observado, que ninguna ruta puede escapar de uploads, que extensiones no permitidas y archivos mayores al limite se rechazan, y que la respuesta no revela la ruta absoluta. Mantener los casos negativos dentro de ubicaciones temporales.
+- **Problema:** `file.filename` se une directamente al directorio de uploads y se escribe sin comprobar que el destino permanezca dentro de esa raiz. Una ruta manipulada puede escapar del directorio o sobrescribir archivos accesibles al proceso. El limite de tamano se rastrea en H-API-08.
+- **Cambio propuesto:** normalizar el nombre recibido, resolver el destino y verificar que quede dentro de la raiz de uploads antes de escribir; acordar una allowlist de extensiones. Mantener `POST /api/requirements`, el estado 201 y las claves de respuesta observadas (`owner`, `fileName`, `storedAt`, `size`); hacer que `fileName` informe el nombre normalizado y no exponga rutas locales. Rechazar archivo invalido con error controlado sin filtrar detalles internos.
+- **Archivos a tocar:** `api/app/main.py` o un modulo de ruta/servicio de carga bajo `api/app/`; configuracion de `api/` para extensiones permitidas; pruebas existentes bajo `api/tests/` o `api/tests/test_api.py` si no hay un modulo equivalente.
+- **Prueba de caracterizacion previa:** con directorio temporal, subir un archivo ficticio pequeno con nombre y extension ordinarios; registrar estado, claves y valores de respuesta y contenido guardado. Comprobar tambien el comportamiento ante un nombre con ruta y una extension no habitual, sin escribir fuera del directorio temporal. Despues, verificar que ninguna ruta puede escapar de uploads, que extensiones no permitidas se rechazan y que la respuesta no revela la ruta absoluta. Mantener los casos negativos dentro de ubicaciones temporales.
+
+### H-API-08 - Limite de tamaño en la carga de requisitos
+
+- **Hallazgo aprobado:** H-API-08 de `HALLAZGOS.md`; el handler leía el archivo completo sin limite y no cubría un umbral máximo.
+- **Decisiones aprobadas:** máximo 100 bytes para el contenido del archivo; rechazar excesos con HTTP 402 y `{"detail":"File exceeds the 100-byte limit"}`.
+- **Cambio implementado:** `POST /api/requirements` lee como máximo 101 bytes y rechaza el exceso antes de escribirlo. Se conservan autenticación, éxito `201`, campos de respuesta y aceptación de archivo vacío.
+- **Archivos modificados:** `api/app/main.py`, `api/tests/test_endpoints.py`, `docs/ENDPOINTS.md`, `docs/TESTING.md`.
+- **Validación real:** primero, las pruebas nuevas detectaron que 101 bytes recibían `201`; tras el cambio, `Push-Location api; try { & .\.venv\Scripts\python.exe -m pytest -q tests\test_endpoints.py -k size_limit } finally { Pop-Location }` pasó (3 tests). La suite `python tools/lab.py test api` pasó (36 passed, 7 xfailed, 100% de cobertura, salida 0).
+- **Riesgo residual:** el límite acota los bytes que el handler lee y guarda, pero el parser multipart puede recibir o almacenar temporalmente el cuerpo antes de ejecutar la ruta. Un límite de ingreso a nivel de servidor o infraestructura queda fuera de este cambio.

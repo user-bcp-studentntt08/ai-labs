@@ -21,6 +21,7 @@ TASK_FIELDS = {"id", "title", "description", "status", "owner", "priority", "cre
 INVALID_TOKEN_PREFIX = "Invalid token"
 SECONDS_PER_HOUR = 3600
 ONE_BYTE_FILE = b"x"
+MAX_UPLOAD_BYTES = 100
 
 Headers = dict[str, str]
 
@@ -251,6 +252,26 @@ def test_upload_requirement_empty_file_reports_zero_size(client: TestClient, upl
     assert response.status_code == 201
     assert response.json()["size"] == 0
     assert (upload_dir / "empty.txt").read_bytes() == b""
+
+
+@pytest.mark.parametrize("size", [MAX_UPLOAD_BYTES - 1, MAX_UPLOAD_BYTES])
+def test_upload_requirement_accepts_files_at_or_below_size_limit(
+    client: TestClient, upload_dir: Path, size: int
+) -> None:
+    content = b"x" * size
+    response = upload(client, "within-limit.txt", content)
+
+    assert response.status_code == 201
+    assert response.json()["size"] == size
+    assert (upload_dir / "within-limit.txt").read_bytes() == content
+
+
+def test_upload_requirement_rejects_file_above_size_limit(client: TestClient, upload_dir: Path) -> None:
+    response = upload(client, "too-large.txt", b"x" * (MAX_UPLOAD_BYTES + 1))
+
+    assert response.status_code == 402
+    assert response.json() == {"detail": "File exceeds the 100-byte limit"}
+    assert not (upload_dir / "too-large.txt").exists()
 
 
 def test_upload_requirement_same_name_overwrites_previous_file(client: TestClient, upload_dir: Path) -> None:

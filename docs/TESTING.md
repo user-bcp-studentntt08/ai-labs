@@ -4,7 +4,7 @@
 
 Pruebas del componente `api`, derivadas de la sección `api` de [ENDPOINTS.md](ENDPOINTS.md). Código en `api/tests/test_endpoints.py` (nuevo) y `api/tests/test_api.py` (existente, sin cambios).
 
-### Resumen de la ejecución
+### Línea base previa (2026-11-02)
 
 | Dato | Valor |
 |---|---|
@@ -17,7 +17,7 @@ Pruebas del componente `api`, derivadas de la sección `api` de [ENDPOINTS.md](E
 | Resultado | **33 passed, 7 xfailed**, 83 avisos de deprecación (`on_event` de FastAPI, `BlockingPortal` de Starlette) |
 | Informe HTML | `api/htmlcov/index.html` |
 
-### Cobertura
+### Cobertura de la línea base
 
 | Métrica | Numerador / denominador | Resultado |
 |---|---|---|
@@ -28,6 +28,20 @@ Pruebas del componente `api`, derivadas de la sección `api` de [ENDPOINTS.md](E
 | Línea base previa (solo `test_api.py`, 4 tests) | 89 / 96 sentencias; 3 ramas parciales | 91 %; sin cubrir: líneas 23, 102->95, 103->95, 116-121 |
 
 Método: coverage.py vía `pytest-cov` con `branch = true` y `source = ["app"]` (`api/pyproject.toml`). El 100 % mide que las líneas se ejecutan, no que el comportamiento sea correcto: los 7 tests xfail ejecutan código con bugs conocidos.
+
+### Ejecución H-API-08 (2026-11-03)
+
+| Dato | Valor |
+|---|---|
+| Componente / IDs | api / H-API-08 |
+| Comando de suite | `python tools/lab.py test api` |
+| Resultado | Salida 0; **36 passed, 7 xfailed**, 89 avisos de deprecación. |
+| Cobertura | 99 / 99 sentencias, 18 / 18 ramas; **100 %**, sobre el umbral requerido de 85 %. |
+| Pruebas focalizadas | `Push-Location api; try { & .\.venv\Scripts\python.exe -m pytest -q tests\test_endpoints.py -k size_limit } finally { Pop-Location }` → **3 passed**. |
+| Test-first | Antes de implementar, el caso de 101 bytes falló al recibir `201` en vez del `402` acordado. Tras el cambio, los 3 casos de frontera pasan. |
+| Informe HTML | `api/htmlcov/index.html` |
+
+Las pruebas nuevas aceptan archivos de 99 y 100 bytes y rechazan uno de 101 bytes con `402` y `{"detail":"File exceeds the 100-byte limit"}`; también verifican que el archivo rechazado no se almacene.
 
 ### Casos por endpoint
 
@@ -57,6 +71,9 @@ Tipos: **H** = camino feliz, **B** = caso borde, **E** = error documentado, **S*
 | `POST /api/requirements` | `requirements.txt` | H | `201`, 4 campos, `size` correcto, bytes guardados | pasa |
 | `POST /api/requirements` | Archivo sin extensión (`README`) | B | `201`, archivo guardado | pasa |
 | `POST /api/requirements` | Archivo vacío | B | `201`, `size` 0 | pasa |
+| `POST /api/requirements` | Archivo de 99 bytes | B | `201`, contenido guardado | pasa H-API-08 |
+| `POST /api/requirements` | Archivo de 100 bytes | B | `201`, contenido guardado | pasa H-API-08 |
+| `POST /api/requirements` | Archivo de 101 bytes | E | `402`, `detail` estable, no se almacena | pasa H-API-08 |
 | `POST /api/requirements` | Mismo nombre dos veces | B | El segundo contenido sobrescribe | pasa |
 | `POST /api/requirements` | Sin campo `file` | E | `422`, `loc` `["body","file"]` | pasa |
 | `POST /api/requirements` | Nombre `../escape.txt` | S | No se crea fuera del directorio de subidas | **xfail** H-API-04 |
@@ -88,7 +105,7 @@ Tipos: **H** = camino feliz, **B** = caso borde, **E** = error documentado, **S*
 
 | propuesta | motivo |
 |---|---|
-| Límite de tamaño y extensión permitida en `POST /api/requirements` | No existen en el código ni en ENDPOINTS.md; dependen de una decisión pendiente en PLAN.md (H-API-04). |
+| Extensiones permitidas en `POST /api/requirements` | No existe una allowlist; depende de una decisión pendiente en PLAN.md (H-API-04). El límite de 100 bytes se implementó en H-API-08. |
 | `detail` del 401 y `body` de `backend-health` no deben filtrar texto de excepciones | Hoy exponen mensajes internos (H-API-07); no es un contrato documentado, es una propuesta de seguridad. |
 | JSON malformado en `POST /api/tasks` | Respuesta no verificada (pregunta abierta en ENDPOINTS.md). |
 | Nombre de archivo con subdirectorios inexistentes | Respuesta no verificada (pregunta abierta en ENDPOINTS.md). |

@@ -236,7 +236,7 @@ Un propietario sin tareas devuelve `total` 0, `byStatus` `{}` y `highPriorityOpe
 
 | campo | tipo | obligatorio | descripción |
 |---|---|---|---|
-| `file` | archivo | Sí | Archivo a guardar. Se almacena en el directorio de subidas con el nombre que envía el cliente. |
+| `file` | archivo | Sí | Archivo a guardar. Se almacena en el directorio de subidas con el nombre que envía el cliente. Máximo: 100 bytes. |
 
 Ejemplo:
 
@@ -279,11 +279,12 @@ Ejemplo, con el directorio por defecto (`./uploads`, configurable con `WORKSHOP_
 | código | cuándo | cuerpo de ejemplo |
 |---|---|---|
 | `401` | Token ausente, inválido o expirado. | `{"detail":"Invalid token: invalid token"}` |
+| `402` | El contenido del archivo supera 100 bytes. | `{"detail":"File exceeds the 100-byte limit"}` |
 | `422` | No se envía el campo `file`. | `{"detail":[{"type":"missing","loc":["body","file"],"msg":"Field required","input":null}]}` |
 
 **6. Notas de seguridad.**
 - El nombre del archivo se usa tal cual para construir la ruta de destino, sin normalizarlo ni comprobar que quede dentro del directorio de subidas. Corresponde a H-API-04.
-- No hay límite de extensión ni de tamaño; el contenido completo se lee en memoria.
+- No hay límite de extensión. El tamaño máximo del contenido es 100 bytes; el endpoint lee como máximo un byte adicional para detectar exceso antes de escribir.
 - Subir un archivo con el mismo nombre sobrescribe el anterior.
 
 ---
