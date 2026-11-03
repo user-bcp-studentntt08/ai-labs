@@ -20,16 +20,11 @@ En el Dia 1 usa solo ramas locales: day1/prompting, main y checkpoint/day1. Cons
 
 #### Clean code
 
-8. Cada método hace una sola cosa; si un método valida, accede a datos y arma
-   la respuesta a la vez (como `AuthResource.login` hoy), sepáralo en capas.
-9. Nombres que expliquen el propósito, no el tipo (evitar `data`, `temp`,
-   `result2`, `handleStuff`).
-10. Sin duplicación: un bloque de código repetido en dos lugares se extrae a
-    un método reutilizable.
-11. Evitar anidamiento profundo (`if` dentro de `if` dentro de `if`); usar
-    guard clauses / retorno anticipado en su lugar.
-12. Sin números o strings "mágicos" sueltos en el código (por ejemplo `3600`
-    para la expiración del token); usar constantes con nombre.
+ 8. Cada método hace una sola cosa; si un método valida, accede a datos y arma la respuesta a la vez (como `AuthResource.login` hoy), sepáralo en capas.
+ 9. Nombres que expliquen el propósito, no el tipo (evitar `data`, `temp`, `result2`, `handleStuff`).
+10. Sin duplicación: un bloque de código repetido en dos lugares se extrae a un método reutilizable.
+11. Evitar anidamiento profundo (`if` dentro de `if` dentro de `if`); usar guard clauses / retorno anticipado en su lugar.
+12. Sin números o strings "mágicos" sueltos en el código (por ejemplo `3600`para la expiración del token); usar constantes con nombre.
 
 ## api
 
@@ -45,17 +40,11 @@ En el Dia 1 usa solo ramas locales: day1/prompting, main y checkpoint/day1. Cons
 
 #### Clean code
 
-8. Cada función hace una sola cosa; si una ruta valida, arma el SQL y
-   serializa la respuesta a la vez (como en `app/main.py` hoy), sepáralo en
-   capas (ruta / servicio / repositorio).
-9. Nombres que expliquen el propósito, no el tipo (evitar `data`, `temp`,
-   `result2`, `handle_stuff`).
-10. Sin duplicación: un bloque de código repetido en dos lugares se extrae a
-    una función reutilizable.
-11. Evitar anidamiento profundo (`if` dentro de `if` dentro de `if`, como en
-    `summary()` hoy); usar retorno anticipado o condiciones combinadas.
-12. Sin números o strings "mágicos" sueltos en el código; usar constantes con
-    nombre.
+ 8. Cada función hace una sola cosa; si una ruta valida, arma el SQL y serializa la respuesta a la vez (como en `app/main.py` hoy), sepáralo en capas (ruta / servicio / repositorio).
+ 9. Nombres que expliquen el propósito, no el tipo (evitar `data`, `temp`, `result2`, `handle_stuff`).
+10. Sin duplicación: un bloque de código repetido en dos lugares se extrae a una función reutilizable.
+11. Evitar anidamiento profundo (`if` dentro de `if` dentro de `if`, como en `summary()` hoy); usar retorno anticipado o condiciones combinadas.
+12. Sin números o strings "mágicos" sueltos en el código; usar constantes con nombre.
 
 ## web
 
@@ -71,14 +60,8 @@ En el Dia 1 usa solo ramas locales: day1/prompting, main y checkpoint/day1. Cons
 
 #### Clean code
 
-8. Cada componente hace una sola cosa; si un componente llama HTTP, maneja
-   sesión y navega a la vez (como `LoginComponent`/`DashboardComponent` hoy),
-   separa la llamada HTTP a un servicio.
-9. Nombres que expliquen el propósito, no el tipo (evitar `data`, `temp`,
-   tipar todo como `any`).
-10. Sin duplicación: un bloque de código repetido en dos componentes se
-    extrae a un servicio o función reutilizable.
-11. Evitar anidamiento profundo (`if` dentro de `if` dentro de `if`, como en
-    `login()` hoy); usar retorno anticipado o condiciones combinadas.
-12. Sin valores "mágicos" sueltos en el código (URLs, claves de
-    `localStorage`); centralizarlos en un solo lugar.
+ 8. Cada componente hace una sola cosa; si un componente llama HTTP, maneja sesión y navega a la vez (como `LoginComponent`/`DashboardComponent` hoy), separa la llamada HTTP a un servicio.
+ 9. Nombres que expliquen el propósito, no el tipo (evitar `data`, `temp`, tipar todo como `any`).
+10. Sin duplicación: un bloque de código repetido en dos componentes se extrae a un servicio o función reutilizable.
+11. Evitar anidamiento profundo (`if` dentro de `if` dentro de `if`, como en `login()` hoy); usar retorno anticipado o condiciones combinadas.
+12. Sin valores "mágicos" sueltos en el código (URLs, claves de `localStorage`); centralizarlos en un solo lugar.

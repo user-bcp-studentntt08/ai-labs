@@ -1,3 +1,7 @@
+---
+name: feature-intake-spec-checklist
+description: Estandariza la definición de funcionalidades antes de la implementación generando un paquete mínimo trazable que cubra alcance, decisiones, riesgos, criterios de aceptación y planes de validación.
+---
 # Skill: Feature Intake -&gt; Spec Checklist
 
 ## 1) Metadata
